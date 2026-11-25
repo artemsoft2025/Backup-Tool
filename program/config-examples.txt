@@ -1,0 +1,716 @@
+================================================================
+📚 Backup Tool v5.3 — ПРИМЕРЫ КОНФИГУРАЦИЙ
+(c) AKSoft, 2026 | https://t.me/avhelpnew
+================================================================
+
+Каждый пример — это готовый config.ini. Скопируйте нужный блок
+в свой config.ini (или создайте файл заново) и поправьте пути.
+
+ОГЛАВЛЕНИЕ
+  1.  Минимальный (только документы)
+  2.  Документы + рабочий стол
+  3.  Фотографии
+  4.  Проекты (код)
+  5.  С шифрованием
+  6.  С разделением на тома
+  7.  Несколько профилей
+  8.  Сетевой диск
+  9.  Полный бэкап домашней папки
+  10. Ежедневный инкремент без полного (только по таймеру)
+  11. Без белого списка (бэкап всего)
+  12. С файлом пароля
+  13. С логированием DEBUG (для отладки)
+  14. Для cron (без прогресс-бара)
+  15. Гибрид: разные профили + разные расписания
+
+
+================================================================
+1. МИНИМАЛЬНЫЙ (ТОЛЬКО ДОКУМЕНТЫ)
+================================================================
+Самый простой вариант. Бэкапятся только офисные документы
+из одной папки. Полный — по понедельникам при накоплении
+30+ изменений.
+
+[General]
+backup_base = ~/backups
+max_full_backups = 4
+max_incremental_backups = 7
+max_age_days = 180
+verify_archive = true
+show_progress = true
+debug = false
+max_inc_files = 30
+
+[Schedule]
+schedule_mode = smart
+full_backup_day = 1
+
+[Include]
+patterns =
+    *.docx
+    *.xlsx
+    *.pdf
+    *.txt
+
+[Exclude]
+patterns =
+    *.tmp
+    ~$*
+
+[Folders]
+paths =
+    ~/Документы
+
+
+================================================================
+2. ДОКУМЕНТЫ + РАБОЧИЙ СТОЛ
+================================================================
+Две папки, офисные форматы + OpenDocument.
+
+[General]
+backup_base = ~/backups
+max_full_backups = 4
+max_incremental_backups = 7
+max_age_days = 180
+verify_archive = true
+show_progress = true
+max_inc_files = 50
+
+[Schedule]
+schedule_mode = smart
+full_backup_day = 1
+
+[Include]
+patterns =
+    *.docx
+    *.xlsx
+    *.pptx
+    *.pdf
+    *.odt
+    *.ods
+    *.odp
+    *.txt
+    *.rtf
+
+[Exclude]
+patterns =
+    *.tmp
+    *.bak
+    ~$*
+    Thumbs.db
+    .DS_Store
+
+[Folders]
+paths =
+    ~/Документы
+    ~/Рабочий стол
+
+
+================================================================
+3. ФОТОГРАФИИ
+================================================================
+Только изображения. Большой max_file_size — фото бывают
+крупными. Без сжатия (compression_level = 0) — JPEG/PNG
+практически не сжимаются, а время тратится.
+
+[General]
+backup_base = ~/backups
+max_full_backups = 3
+max_incremental_backups = 10
+max_age_days = 365
+verify_archive = true
+show_progress = true
+compression_level = 0
+max_file_size = 524288000
+max_inc_files = 100
+
+[Schedule]
+schedule_mode = smart
+full_backup_day = 1
+
+[Include]
+patterns =
+    *.jpg
+    *.jpeg
+    *.png
+    *.gif
+    *.bmp
+    *.tiff
+    *.heic
+    *.raw
+    *.cr2
+    *.nef
+
+[Exclude]
+patterns =
+    *.tmp
+    Thumbs.db
+    .DS_Store
+
+[Folders]
+paths =
+    ~/Изображения
+    ~/Pictures
+
+
+================================================================
+4. ПРОЕКТЫ (КОД)
+================================================================
+Исходники, конфиги, документация. Исключаем всё, что
+восстанавливается из репозитория или генерируется сборкой.
+
+[General]
+backup_base = ~/backups
+max_full_backups = 4
+max_incremental_backups = 14
+max_age_days = 90
+verify_archive = true
+show_progress = true
+max_inc_files = 20
+
+[Schedule]
+schedule_mode = smart
+full_backup_day = 1
+
+[Include]
+patterns =
+    *.py
+    *.js
+    *.ts
+    *.jsx
+    *.tsx
+    *.html
+    *.css
+    *.scss
+    *.json
+    *.yaml
+    *.yml
+    *.toml
+    *.md
+    *.txt
+    Dockerfile
+    Makefile
+    requirements.txt
+    package.json
+
+[Exclude]
+patterns =
+    __pycache__
+    .git
+    .svn
+    node_modules
+    .venv
+    venv
+    .idea
+    .vscode
+    *.pyc
+    *.pyo
+    dist
+    build
+    target
+    *.log
+    *.tmp
+
+[Folders]
+paths =
+    ~/projects
+    ~/dev
+
+
+================================================================
+5. С ШИФРОВАНИЕМ
+================================================================
+AES-256. Пароль в конфиге — простой вариант (менее
+безопасный). Для продакшена см. пример 12.
+
+[General]
+backup_base = ~/backups
+max_full_backups = 4
+max_incremental_backups = 7
+max_age_days = 180
+verify_archive = true
+show_progress = true
+max_inc_files = 30
+encryption_enabled = true
+encryption_password = MyStrongPassword2026!
+
+[Schedule]
+schedule_mode = smart
+full_backup_day = 1
+
+[Include]
+patterns =
+    *.docx
+    *.xlsx
+    *.pdf
+    *.txt
+    *.jpg
+    *.png
+
+[Exclude]
+patterns =
+    *.tmp
+    *.log
+
+[Folders]
+paths =
+    ~/Документы/Важное
+
+
+================================================================
+6. С РАЗДЕЛЕНИЕМ НА ТОМА
+================================================================
+Для больших архивов (например, при бэкапе на флешку
+с FAT32, где лимит 4 GB на файл). Тома по 2 GB.
+
+[General]
+backup_base = ~/backups
+max_full_backups = 2
+max_incremental_backups = 5
+max_age_days = 180
+verify_archive = true
+show_progress = true
+max_inc_files = 50
+max_volume_size = 2147483648
+volume_prefix = part
+
+[Schedule]
+schedule_mode = smart
+full_backup_day = 1
+
+[Folders]
+paths =
+    ~/Документы
+    ~/Изображения
+    ~/projects
+
+# Результат:
+#   2026-11-24_full.part001.zip  (2 GB)
+#   2026-11-24_full.part002.zip  (2 GB)
+#   2026-11-24_full.part003.zip  (1.2 GB)
+#
+# Восстановление:
+#   ./backup --restore .../2026-11-24_full.part001.zip --target /restore
+#   (тома склеятся автоматически)
+
+
+================================================================
+7. НЕСКОЛЬКО ПРОФИЛЕЙ
+================================================================
+Разные типы данных — разные настройки. Запуск:
+  ./backup                 — все профили
+  ./backup -p documents    — только документы
+  ./backup -p photos       — только фото
+
+[General]
+backup_base = ~/backups
+max_full_backups = 4
+max_incremental_backups = 7
+max_age_days = 180
+verify_archive = true
+show_progress = true
+max_inc_files = 30
+
+[Schedule]
+schedule_mode = smart
+full_backup_day = 1
+
+[Profile:documents]
+paths =
+    ~/Документы
+    ~/Рабочий стол
+include =
+    *.docx
+    *.xlsx
+    *.pdf
+    *.txt
+exclude =
+    *.tmp
+    ~$*
+
+[Profile:photos]
+paths =
+    ~/Изображения
+include =
+    *.jpg
+    *.png
+    *.heic
+compression_level = 0
+max_inc_files = 100
+
+[Profile:projects]
+paths =
+    ~/projects
+include =
+    *.py
+    *.js
+    *.json
+    *.md
+exclude =
+    node_modules
+    .git
+    __pycache__
+    .venv
+
+
+================================================================
+8. СЕТЕВОЙ ДИСК
+================================================================
+Бэкап на NAS или сетевую шару. Убедитесь, что диск
+смонтирован и доступен на запись.
+
+[General]
+backup_base = /mnt/network_drive/backups
+max_full_backups = 4
+max_incremental_backups = 7
+max_age_days = 180
+verify_archive = true
+show_progress = true
+max_inc_files = 30
+min_free_space = 5368709120
+
+[Schedule]
+schedule_mode = smart
+full_backup_day = 1
+
+[Folders]
+paths =
+    ~/Документы
+    ~/projects
+
+
+================================================================
+9. ПОЛНЫЙ БЭКАП ДОМАШНЕЙ ПАПКИ
+================================================================
+Всё, кроме мусора. Большой max_file_size — чтобы не
+пропустить видео/архивы. Осторожно: может занять много
+места.
+
+[General]
+backup_base = /mnt/backup_drive/home_backup
+max_full_backups = 2
+max_incremental_backups = 7
+max_age_days = 90
+verify_archive = true
+show_progress = true
+compression_level = 6
+max_file_size = 2147483648
+min_free_space = 10737418240
+max_inc_files = 500
+
+[Schedule]
+schedule_mode = smart
+full_backup_day = 1
+
+[Exclude]
+patterns =
+    .cache
+    .local/share/Trash
+    .mozilla/firefox/*/Cache
+    .config/google-chrome/*/Cache
+    node_modules
+    .venv
+    venv
+    __pycache__
+    *.pyc
+    *.tmp
+    *.log
+    .git
+    .svn
+
+[Folders]
+paths =
+    ~
+
+
+================================================================
+10. ЕЖЕДНЕВНЫЙ ИНКРЕМЕНТ БЕЗ ПОЛНОГО (ТОЛЬКО ПО ТАЙМЕРУ)
+================================================================
+Полный — только если прошло 30 дней с последнего (жёстко
+в коде) или если полного нет. Понедельник игнорируется:
+schedule_mode = monthly, full_backup_day_of_month = 32
+(такого дня не бывает) — полный только по 30-дневному
+таймеру.
+
+[General]
+backup_base = ~/backups
+max_full_backups = 12
+max_incremental_backups = 30
+max_age_days = 365
+verify_archive = true
+show_progress = true
+max_inc_files = 0
+
+[Schedule]
+schedule_mode = monthly
+full_backup_day_of_month = 32
+
+[Folders]
+paths =
+    ~/Документы
+
+
+================================================================
+11. БЕЗ БЕЛОГО СПИСКА (БЭКАП ВСЕГО)
+================================================================
+Если [Include] пуст — бэкапится всё, кроме [Exclude].
+Удобно, когда не хочется перечислять расширения.
+
+[General]
+backup_base = ~/backups
+max_full_backups = 4
+max_incremental_backups = 7
+max_age_days = 180
+verify_archive = true
+show_progress = true
+max_inc_files = 50
+
+[Schedule]
+schedule_mode = smart
+full_backup_day = 1
+
+[Include]
+patterns =
+
+[Exclude]
+patterns =
+    *.tmp
+    *.log
+    *.cache
+    __pycache__
+    .git
+    node_modules
+    .venv
+    venv
+    .idea
+    .vscode
+    *.pyc
+    *.pyo
+    Thumbs.db
+    .DS_Store
+
+[Folders]
+paths =
+    ~/Документы
+    ~/projects
+
+
+================================================================
+12. С ФАЙЛОМ ПАРОЛЯ (БЕЗОПАСНЕЕ)
+================================================================
+Пароль хранится в отдельном файле с правами 600.
+В конфиге — только путь.
+
+Создание файла:
+  echo "MyStrongPassword2026!" > ~/.backup_password
+  chmod 600 ~/.backup_password
+
+[General]
+backup_base = ~/backups
+max_full_backups = 4
+max_incremental_backups = 7
+max_age_days = 180
+verify_archive = true
+show_progress = true
+max_inc_files = 30
+encryption_enabled = true
+encryption_password =
+encryption_password_file = ~/.backup_password
+
+[Schedule]
+schedule_mode = smart
+full_backup_day = 1
+
+[Folders]
+paths =
+    ~/Документы/Важное
+
+
+================================================================
+13. С ЛОГИРОВАНИЕМ DEBUG (ДЛЯ ОТЛАДКИ)
+================================================================
+Подробный вывод в лог и консоль. Используйте, когда
+что-то идёт не так. Для повседневной работы — debug = false.
+
+[General]
+backup_base = ~/backups
+max_full_backups = 4
+max_incremental_backups = 7
+max_age_days = 180
+verify_archive = true
+show_progress = true
+debug = true
+max_inc_files = 30
+
+logging_enabled = true
+log_file = ~/logs/backup.log
+log_level = DEBUG
+log_max_size = 52428800
+log_backup_count = 5
+
+[Schedule]
+schedule_mode = smart
+full_backup_day = 1
+
+[Folders]
+paths =
+    ~/Документы
+
+
+================================================================
+14. ДЛЯ CRON (БЕЗ ПРОГРЕСС-БАРА)
+================================================================
+show_progress = false — чтобы \r-символы не засоряли лог.
+debug = false — чтобы не было лишнего шума.
+verify_archive = false — если важна скорость (но лучше true).
+
+[General]
+backup_base = ~/backups
+max_full_backups = 4
+max_incremental_backups = 7
+max_age_days = 180
+verify_archive = true
+show_progress = false
+debug = false
+max_inc_files = 50
+
+logging_enabled = true
+log_file = ~/logs/backup.log
+log_level = INFO
+
+[Schedule]
+schedule_mode = smart
+full_backup_day = 1
+
+[Folders]
+paths =
+    ~/Документы
+    ~/projects
+
+# crontab:
+# 0 23 * * * cd /path/to/backup_tool && ./backup -p default >> ~/logs/cron.log 2>&1
+
+
+================================================================
+15. ГИБРИД: РАЗНЫЕ ПРОФИЛИ + РАЗНЫЕ РАСПИСАНИЯ
+================================================================
+Документы — полный по понедельникам.
+Фото — полный 1-го числа каждого месяца.
+Проекты — только инкремент, полный по 30-дневному таймеру.
+
+[General]
+backup_base = ~/backups
+max_full_backups = 4
+max_incremental_backups = 7
+max_age_days = 180
+verify_archive = true
+show_progress = true
+
+[Schedule]
+schedule_mode = smart
+full_backup_day = 1
+
+[Profile:documents]
+paths =
+    ~/Документы
+include =
+    *.docx
+    *.xlsx
+    *.pdf
+max_inc_files = 30
+
+[Profile:photos]
+paths =
+    ~/Изображения
+include =
+    *.jpg
+    *.png
+compression_level = 0
+max_inc_files = 100
+schedule_mode = monthly
+full_backup_day_of_month = 1
+
+[Profile:projects]
+paths =
+    ~/projects
+include =
+    *.py
+    *.js
+    *.json
+exclude =
+    node_modules
+    .git
+    __pycache__
+max_inc_files = 0
+schedule_mode = monthly
+full_backup_day_of_month = 32
+
+# Запуск:
+#   ./backup                  — все три профиля (каждый по своему расписанию)
+#   ./backup -p documents     — только документы
+#   ./backup -p photos        — только фото
+#   ./backup -p projects      — только проекты
+
+
+================================================================
+📌 БЫСТРАЯ ШПАРГАЛКА ПО ПАРАМЕТРАМ
+================================================================
+
+backup_base               Куда складывать бэкапы
+max_full_backups          Сколько полных хранить
+max_incremental_backups   Сколько инкрементальных хранить
+max_age_days              Удалять старше N дней (0 = бессрочно)
+verify_archive            Проверять целостность после создания
+show_progress             Прогресс-бар (для cron → false)
+debug                     Подробный вывод (для отладки → true)
+hash_size                 Размер для контрольной суммы (1 MB)
+max_file_size             Макс. размер файла (0 = без лимита)
+min_free_space            Минимум свободного места
+skip_large_files          true = пропускать большие, false = предупреждать
+compression_level         0-9 (6 — оптимум; 0 для JPEG/PNG)
+max_inc_files             Порог изменений для полного (0 = при любом)
+max_volume_size           Размер тома (0 = без разделения)
+volume_prefix             Префикс томов
+encryption_enabled        Включить AES-256
+encryption_password       Пароль (или пусто)
+encryption_password_file  Файл с паролем (безопаснее)
+logging_enabled           Включить лог
+log_file                  Путь к логу
+log_level                 DEBUG | INFO | WARNING | ERROR
+log_max_size              Макс. размер лога
+log_backup_count          Сколько старых логов хранить
+
+schedule_mode             weekly | monthly | smart
+full_backup_day           День недели (1=пн ... 7=вс)
+full_backup_day_of_month  День месяца (1-31; 0 = последний; 32 = никогда)
+
+[Include] patterns        Белый список (пусто = всё)
+[Exclude] patterns        Чёрный список
+[Folders] paths           Папки для бэкапа (каждая с новой строки)
+[Profile:NAME]            Отдельный профиль со своими настройками
+
+
+================================================================
+📌 ПРО ПУТИ В WINDOWS
+================================================================
+
+Во всех примерах выше пути в формате Linux. Для Windows
+просто измените эти пути, например:
+
+backup_base = C:/Users/Username/backups
+
+paths =
+    C:/Users/Username/Documents
+    C:/Users/Username/projects
+
+================================================================
+📞 КОНТАКТЫ
+================================================================
+
+  Разработчик: AKSoft
+  Telegram:    https://t.me/avhelpnew
+  GH:          https://github.com/artemsoft2025
+
+
+
+
